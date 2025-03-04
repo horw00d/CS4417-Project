@@ -35,30 +35,6 @@ function validatePassword(password){
     }
 }
 
-const checkToken = (req, res, next) => {
-    const header = req.headers['authorization'];
-
-    if (!header) {
-        return res.status(403).json({ message: 'Token is required' });
-    }
-
-    const bearer = header.split(' ');
-    if (bearer.length !== 2) {
-        return res.status(403).json({ message: 'Invalid token format' });
-    }
-
-    const token = bearer[1];
-
-    jwt.verify(token, process.env.PRIVATE_KEY, (err, decoded) => {
-        if (err) {
-            return res.status(403).json({ message: 'Unauthorized' });
-        }
-        req.user = decoded;
-        next();
-    });
-};
-
-
 exports.getUsers = async (req, res) => {
     try{
         const result = await pool.query('SELECT * FROM users;');
@@ -102,13 +78,30 @@ exports.login = async (req, res) => {
 };
 
 exports.logout = (req, res) => {
-    res.clearCookie('token');
-    return res.status(200).json({ message: 'Logged out successfully' });
+    try {
+        // Clear the token cookie
+        res.cookie('token', '', {
+            httpOnly: true,
+            secure: process.env.NODE_ENV === 'production',
+            sameSite: 'strict',
+            expires: new Date(0)
+        });
+
+        return res.status(200).json({ 
+            message: 'Logged out successfully'
+        });
+    } catch (error) {
+        console.error('Logout error:', error);
+        return res.status(500).json({ 
+            message: 'Error during logout', 
+            error: error.message 
+        });
+    }
 };
 
 exports.register = async (req, res) => {
     try {
-        const { username, email, password } = req.body;
+        const {username, email, password} = req.body;
 
         const userVerification = await pool.query('SELECT * FROM users WHERE email = $1', [email]);
         if (userVerification.rows.length > 0) {
@@ -183,7 +176,7 @@ exports.protectedRoute = async (req, res) => {
         //JWT implementation inspired by: https://medium.com/@maison.moa/using-jwt-json-web-tokens-to-authorize-users-and-protect-api-routes-3e04a1453c3e
         const decoded = jwt.verify(token, process.env.PRIVATE_KEY);
 
-        return res.status(200).json({ message: 'Protected content', user: decoded });
+        return res.status(200).json({ message: 'Protected content from server', user: decoded });
 
     } catch (error) {
         return res.status(403).json({ message: 'Unauthorized', error: error.message });
