@@ -1,5 +1,7 @@
 const pool = require('../database');
+const mail = require('../middleware/mail');
 const bcrypt = require('bcrypt');
+const crypto = require('crypto');
 const jwt = require('jsonwebtoken');
 require('dotenv').config();
 
@@ -45,6 +47,16 @@ exports.getUsers = async (req, res) => {
     }
 }
 
+exports.getFeedback = async (req, res) => {
+    try{
+        const result = await pool.query('SELECT * FROM feedback;');
+        res.json(result.rows);
+    }
+    catch (error){
+        console.error('Error executing query', error);
+    }
+}
+
 exports.login = async (req, res) => {
     try{
         const { email, password } = req.body;
@@ -69,7 +81,7 @@ exports.login = async (req, res) => {
             secure: process.env.NODE_ENV === 'production',
             sameSite: 'Strict'
         });
-        return res.status(200).json({message: 'Login successful', user: {id: user.id, email: user.email}, token});
+        return res.status(200).json({message: 'Login successful', user: {id: user.id, email: user.email, new_user: user.new_user}, success: true});
         
 
     } catch (error) {
@@ -79,7 +91,6 @@ exports.login = async (req, res) => {
 
 exports.logout = (req, res) => {
     try {
-        // Clear the token cookie
         res.cookie('token', '', {
             httpOnly: true,
             secure: process.env.NODE_ENV === 'production',
@@ -128,13 +139,40 @@ exports.register = async (req, res) => {
     }
 };
 
+exports.addUser = async (req, res) => {
+    try {
+        const {username, email} = req.body;
+
+        const userVerification = await pool.query('SELECT * FROM users WHERE email = $1', [email]);
+        if (userVerification.rows.length > 0) {
+            return res.status(400).json({ message: 'User already exists' });
+        }
+
+        const tempPassword = crypto.randomBytes(8).toString('hex');
+
+        const saltRounds = 10;
+        const hashedPassword = await bcrypt.hash(tempPassword, saltRounds);
+
+        const newUser = await pool.query(
+            'INSERT INTO users (username, email, password_hash) VALUES ($1, $2, $3) RETURNING id, email;',
+            [username, email, hashedPassword]
+        );
+
+        mail(email, tempPassword);
+        res.status(201).json({ message: 'User added successfully', user: newUser.rows[0] });
+
+    } catch (error) {
+        res.status(500).json({ message: 'Internal server error', error: error.message });
+    }
+};
+
 
 exports.changePassword = async (req, res) => {
     try {
         const { email, password, newPassword } = req.body;
 
         const userQuery = await pool.query('SELECT * FROM users WHERE email=$1', [email]);
-        if (userQuery.rows.length == 0) {
+        if (userQuery.rows.length === 0) {
             return res.status(400).json({ message: 'Invalid email or password' });
         }
 
@@ -154,7 +192,7 @@ exports.changePassword = async (req, res) => {
         const hashedPassword = await bcrypt.hash(newPassword, saltRounds);
 
         const updatedUser = await pool.query(
-            'UPDATE users SET password_hash=$1 WHERE email=$2 RETURNING id, email;',
+            'UPDATE users SET password_hash=$1, new_user=false WHERE email=$2 RETURNING id, email;',
             [hashedPassword, email]
         );
 
@@ -165,9 +203,34 @@ exports.changePassword = async (req, res) => {
     }
 };
 
+exports.addFeedback = async (req, res) => {
+    try {
+        const {feedback} = req.body;
+
+        const token = req.cookies.token;
+
+        if (!token) {
+            return res.status(403).json({message: "Unauthorized"});
+        }
+
+        const decoded = jwt.verify(token, process.env.PRIVATE_KEY);
+        const email = decoded.email;
+
+        const newFeedback = await pool.query(
+            'INSERT INTO feedback (email, feedback) VALUES ($1, $2) RETURNING email, feedback;',
+            [email, feedback]
+        );
+
+        res.status(201).json({ message: 'Feedback added successfully', feedback: newFeedback.rows[0] });
+
+    } catch (error) {
+        return res.status(500).json({ message: 'Internal server error', error: error.message });
+    }
+};
+
 exports.protectedRoute = async (req, res) => {
     try {
-        const token = req.headers.authorization?.split(' ')[1];
+        const token = req.cookies.token;
 
         if (!token) {
             return res.status(403).json({ message: 'Token is required' });
@@ -182,6 +245,53 @@ exports.protectedRoute = async (req, res) => {
         return res.status(403).json({ message: 'Unauthorized', error: error.message });
     }
 };
+
+exports.checkAuth = async (req, res) => {
+    try {
+        const token = req.cookies.token;
+
+        if (!token) {
+            return res.json({ authenticated: false });
+        }
+
+        const decoded = jwt.verify(token, process.env.PRIVATE_KEY);
+
+        const userQuery = await pool.query('SELECT * FROM users WHERE email=$1', [decoded.email]);
+        if (userQuery.rows.length === 0) {
+            return res.json({ authenticated: false });
+        }
+
+        const user = userQuery.rows[0];
+
+        return res.json({ authenticated: true, new_user: user.new_user });
+
+    } catch (error) {
+        return res.json({ authenticated: false });
+    }
+};
+
+exports.checkRole = async (req, res) => {
+    try {
+        const token = req.cookies.token;
+        if (!token){
+            return res.status(401).json({ role: null, error: "No token provided" });
+        }
+        const decoded = jwt.verify(token, process.env.PRIVATE_KEY);
+        const userQuery = await pool.query('SELECT role FROM users WHERE email=$1', [decoded.email]);
+
+        if (userQuery.rows.length === 0){
+            return res.status(404).json({ role: null, error: "User not found" });
+        }
+
+        return res.json({ role: userQuery.rows[0].role });
+
+    } catch (error) {
+        console.error("Error checking role:", error);
+        return res.status(500).json({ role: null, error: "Server error" });
+    }
+};
+
+
 
 
 
