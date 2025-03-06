@@ -2,6 +2,7 @@ const pool = require('../database');
 const bcrypt = require('bcrypt');
 const crypto = require('crypto');
 const mail = require('../middleware/mail');
+const jwt = require('jsonwebtoken');
 const { validatePassword } = require('../utils/validators');
 
 exports.getUsers = async (req, res) => {
