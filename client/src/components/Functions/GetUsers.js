@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 
-export default function UserTable() {
+export default function GetUsers() {
     const [users, setUsers] = useState([]);
     const [error, setError] = useState(null);
 
@@ -21,26 +21,26 @@ export default function UserTable() {
     }, []);
 
     return (
-        <div style={styles.container}>
-            <h2>User List</h2>
-            {error && <p style={styles.error}>{error}</p>}
-            <div style={styles.tableWrapper}>
-                <table style={styles.table}>
-                    <thead>
+        <div className="w-full max-w-4xl mx-auto p-4 bg-white rounded-lg shadow-md">
+            <h2 className="text-lg font-semibold text-center mb-4">User List</h2>
+            {error && <p className="text-red-500 text-center">{error}</p>}
+            <div className="max-h-80 overflow-y-auto border border-gray-300 rounded-md">
+                <table className="w-full border-collapse">
+                    <thead className="bg-blue-500 text-white">
                         <tr>
-                            <th>ID</th>
-                            <th>Username</th>
-                            <th>Email</th>
-                            <th>Role</th>
+                            <th className="p-2">ID</th>
+                            <th className="p-2">Username</th>
+                            <th className="p-2">Email</th>
+                            <th className="p-2">Role</th>
                         </tr>
                     </thead>
-                    <tbody>
+                    <tbody className="bg-gray-100">
                         {users.map(user => (
-                            <tr key={user.id}>
-                                <td>{user.id}</td>
-                                <td>{user.username}</td>
-                                <td>{user.email}</td>
-                                <td>{user.role}</td>
+                            <tr key={user.id} className="border-b border-gray-300">
+                                <td className="p-2">{user.id}</td>
+                                <td className="p-2">{user.username}</td>
+                                <td className="p-2">{user.email}</td>
+                                <td className="p-2">{user.role}</td>
                             </tr>
                         ))}
                     </tbody>
@@ -49,40 +49,3 @@ export default function UserTable() {
         </div>
     );
 }
-
-const styles = {
-    container: {
-        width: '60%',
-        margin: '20px auto',
-        padding: '10px',
-        border: '1px solid #ccc',
-        borderRadius: '10px',
-        backgroundColor: '#f9f9f9',
-        boxShadow: '0px 4px 6px rgba(0, 0, 0, 0.1)',
-        textAlign: 'center',
-    },
-    tableWrapper: {
-        maxHeight: '300px',
-        overflowY: 'auto',
-        borderRadius: '8px',
-        border: '1px solid #ddd',
-        backgroundColor: '#ffffff',
-    },
-    table: {
-        width: '100%',
-        borderCollapse: 'collapse',
-    },
-    th: {
-        backgroundColor: '#e3f2fd',
-        padding: '8px',
-        borderBottom: '1px solid #ccc',
-        fontWeight: 'bold',
-    },
-    td: {
-        padding: '6px',
-        borderBottom: '1px solid #eee',
-    },
-    error: {
-        color: 'red',
-    }
-};

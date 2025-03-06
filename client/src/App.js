@@ -50,12 +50,12 @@ function App() {
     }, [location.pathname]);
 
     if (loading) {
-        return <p>Loading...</p>;
+        return <p className="text-center text-gray-600">Loading...</p>;
     }
 
     return (
-        <div>
-            <h1>APP</h1>
+        <div className="min-h-screen bg-gray-100">
+            <h1 className="text-3xl font-bold text-center py-4 bg-blue-500 text-white">CS4417 Project</h1>
             <Routes>
                 {!isAuthenticated ? (
                     <>

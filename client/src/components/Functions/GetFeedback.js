@@ -21,62 +21,18 @@ export default function GetFeedback() {
     }, []);
 
     return (
-        <div style={styles.container}>
-            <h2>Feedback Chat</h2>
-            {error && <p style={styles.error}>{error}</p>}
-            <div style={styles.chatBox}>
+        <div className="w-100 mx-auto p-4 border rounded-lg bg-gray-100 shadow-md">
+            <h2 className="text-lg font-semibold text-center mb-4">Feedback Chat</h2>
+            {error && <p className="text-red-500 text-center">{error}</p>}
+            <div className="max-h-80 overflow-y-auto p-2 border-t bg-white rounded-md">
                 {feedbackList.map((feedback) => (
-                    <div key={feedback.feedbackid} style={styles.message}>
-                        <p style={styles.email}>{feedback.email}</p>
-                        <p style={styles.text}>{feedback.feedback}</p>
-                        <p style={styles.timestamp}>{new Date(feedback.created_at).toLocaleString()}</p>
+                    <div key={feedback.feedbackid} className="p-3 mb-3 rounded-lg bg-blue-100 text-sm shadow-sm">
+                        <p className="font-bold text-xs mb-1">{feedback.email}</p>
+                        <p className="text-sm mb-1">{feedback.feedback}</p>
+                        <p className="text-xs text-gray-500 text-right">{new Date(feedback.created_at).toLocaleString()}</p>
                     </div>
                 ))}
             </div>
         </div>
     );
 }
-
-const styles = {
-    container: {
-        width: '50%',
-        margin: '20px auto',
-        padding: '10px',
-        border: '1px solid #ccc',
-        borderRadius: '10px',
-        backgroundColor: '#f9f9f9',
-        boxShadow: '0px 4px 6px rgba(0, 0, 0, 0.1)',
-    },
-    chatBox: {
-        maxHeight: '300px',
-        overflowY: 'auto',
-        padding: '10px',
-        borderTop: '1px solid #ccc',
-        backgroundColor: '#ffffff',
-    },
-    message: {
-        padding: '6px',
-        marginBottom: '6px',
-        borderRadius: '6px',
-        backgroundColor: '#e3f2fd',
-        fontSize: '14px',
-        boxShadow: '2px 2px 5px rgba(0, 0, 0, 0.1)',
-    },
-    email: {
-        fontWeight: 'bold',
-        marginBottom: '3px',
-        fontSize: '13px',
-    },
-    text: {
-        marginBottom: '3px',
-        fontSize: '12px',
-    },
-    timestamp: {
-        fontSize: '10px',
-        color: 'gray',
-        textAlign: 'right',
-    },
-    error: {
-        color: 'red',
-    }
-};

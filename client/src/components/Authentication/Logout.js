@@ -7,7 +7,7 @@ export default function Logout() {
         try {
             const response = await fetch('http://localhost:5000/routes/logout', {
                 method: 'POST',
-                credentials: 'include', // Ensures cookies are included
+                credentials: 'include',
                 headers: {
                     'Content-Type': 'application/json',
                 }
@@ -26,7 +26,7 @@ export default function Logout() {
             const response = await logout();
 
             if (response.message === 'Logged out successfully') {
-                window.location.href = "/login"; // Redirect to login
+                window.location.href = "/login";
             } else {
                 setMessage(response.message || "Logout failed");
             }
@@ -37,14 +37,15 @@ export default function Logout() {
     }
 
     return (
-        <div>
+        <div className="flex flex-col items-center mt-4">
             <button 
                 onClick={handleLogout} 
+                className="px-4 py-2 bg-gray-500 text-white rounded-md shadow-md hover:bg-gray-600 transition"
             >
                 Logout
             </button>
             {message && (
-                <p className="error-message">{message}</p>
+                <p className="mt-2 text-red-500 text-sm">{message}</p>
             )}
         </div>
     );
