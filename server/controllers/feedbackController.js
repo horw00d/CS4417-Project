@@ -1,5 +1,6 @@
 const pool = require('../database');
 const jwt = require('jsonwebtoken');
+const xss = require('xss');
 
 exports.getFeedback = async (req, res) => {
     try {
@@ -22,9 +23,11 @@ exports.addFeedback = async (req, res) => {
         const decoded = jwt.verify(token, process.env.PRIVATE_KEY);
         const email = decoded.email;
 
+        const sanitizedFeedback = xss(feedback);
+
         const newFeedback = await pool.query(
             'INSERT INTO feedback (email, feedback) VALUES ($1, $2) RETURNING email, feedback;',
-            [email, feedback]
+            [email, sanitizedFeedback]
         );
 
         res.status(201).json({ message: 'Feedback added successfully', feedback: newFeedback.rows[0] });

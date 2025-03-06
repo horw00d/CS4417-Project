@@ -1,12 +1,18 @@
 const pool = require('../database');
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
-const { validatePassword } = require('../utils/validators');
+const { validateEmail, validatePassword } = require('../utils/validators');
 require('dotenv').config();
 
 exports.login = async (req, res) => {
     try {
         const { email, password } = req.body;
+
+        const emailValidation = validateEmail(email);
+        if (!emailValidation.isValid) {
+            return res.status(400).json({ message: "Incorrect email format", error: emailValidation.error });
+        }
+
         const userQuery = await pool.query('SELECT * FROM users WHERE email=$1', [email]);
         if (userQuery.rows.length === 0) {
             return res.status(400).json({ message: 'Invalid email or password' });
@@ -50,6 +56,11 @@ exports.logout = (req, res) => {
 exports.changePassword = async (req, res) => {
     try {
         const { email, password, newPassword } = req.body;
+
+        const emailValidation = validateEmail(email);
+        if (!emailValidation.isValid) {
+            return res.status(400).json({ message: "Incorrect email format", error: emailValidation.error });
+        }
 
         const userQuery = await pool.query('SELECT * FROM users WHERE email=$1', [email]);
         if (userQuery.rows.length === 0) {

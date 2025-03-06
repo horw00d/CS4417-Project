@@ -1,8 +1,6 @@
 import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
 
 export default function AddUser() {
-    const navigate = useNavigate();
     const [username, setUsername] = useState("");
     const [email, setEmail] = useState("");
     const [message, setMessage] = useState("");
@@ -10,6 +8,7 @@ export default function AddUser() {
     async function addUser(details) {
         return await fetch('http://localhost:5000/routes/addUser', {
             method: 'POST',
+            credentials: 'include',
             headers: {
                 'Content-Type': 'application/json'
             },
@@ -21,11 +20,9 @@ export default function AddUser() {
         e.preventDefault();
         const response = await addUser({ username, email });
 
-        if (response.user) {
-            navigate("/landing");
+        if (response.message) {
+            setMessage(response.message);
         }
-
-        setMessage(response.message);
     };
 
     return (
