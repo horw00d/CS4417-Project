@@ -23,6 +23,10 @@ exports.addFeedback = async (req, res) => {
         const decoded = jwt.verify(token, process.env.PRIVATE_KEY);
         const email = decoded.email;
 
+        if (!feedback || feedback.trim().length === 0) {
+            return res.status(400).json({ message: 'Feedback cannot be empty' });
+        }
+
         const sanitizedFeedback = xss(feedback);
 
         const newFeedback = await pool.query(

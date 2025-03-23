@@ -70,7 +70,7 @@ function App() {
                 ) : (
                     <>
                         <Route path="/landing" element={<Landing />} />
-                        <Route path="/changePassword" element={<ChangePassword />} />
+                        <Route path="/changePassword" element={<ChangePassword setIsNewUser={setIsNewUser} />} />
                         {userRole === 'admin' && <Route path="/admin" element={<Admin />} />}
                         {userRole === 'admin' && <Route path="/addUser" element={<AddUser />} />}
                         {userRole === 'admin' && <Route path="/getUsers" element={<GetUsers />} />}
